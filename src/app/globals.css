@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 210 40% 98%;
+  --foreground: 222 47% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --primary: 173 80% 34%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 230 28% 94%;
+  --secondary-foreground: 222 47% 11%;
+  --muted: 220 20% 94%;
+  --muted-foreground: 220 9% 46%;
+  --accent: 262 83% 58%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 220 16% 88%;
+  --input: 220 16% 88%;
+  --ring: 173 80% 34%;
+  --radius: 0.5rem;
+}
+
+.dark {
+  --background: 222 47% 8%;
+  --foreground: 210 40% 96%;
+  --card: 222 42% 12%;
+  --card-foreground: 210 40% 96%;
+  --primary: 172 66% 50%;
+  --primary-foreground: 222 47% 8%;
+  --secondary: 222 32% 18%;
+  --secondary-foreground: 210 40% 96%;
+  --muted: 222 32% 18%;
+  --muted-foreground: 215 20% 70%;
+  --accent: 262 83% 68%;
+  --accent-foreground: 222 47% 8%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 210 40% 96%;
+  --border: 222 28% 22%;
+  --input: 222 28% 22%;
+  --ring: 172 66% 50%;
+}
+
+* {
+  @apply border-border;
+}
+
+body {
+  @apply min-h-screen bg-background text-foreground antialiased;
+}
+
+button,
+a,
+input,
+[role="combobox"] {
+  @apply transition;
+}
+
+@layer components {
+  .page-transition-enter {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  .page-transition-enter-active {
+    opacity: 1;
+    transform: scale(1);
+    transition: opacity 300ms, transform 300ms;
+  }
+}
+
+#nprogress {
+  pointer-events: none;
+}
+
+#nprogress .bar {
+  background: var(--primary);
+  position: fixed;
+  z-index: 1031;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+}
+
+.app-gradient {
+  background:
+    radial-gradient(circle at 20% 10%, rgba(20, 184, 166, 0.15), transparent 28rem),
+    radial-gradient(circle at 85% 12%, rgba(99, 102, 241, 0.12), transparent 26rem),
+    linear-gradient(180deg, hsl(var(--background)), hsl(var(--background)));
+}
