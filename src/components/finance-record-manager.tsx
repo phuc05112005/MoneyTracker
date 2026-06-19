@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Edit3, Plus, Search, Trash2 } from "lucide-react";
+import { Edit3, Loader2, Plus, Search, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import { type Resolver, useForm } from "react-hook-form";
 import type { z } from "zod";
@@ -37,9 +37,17 @@ export function FinanceRecordManager({
   const [editing, setEditing] = useState<RecordItem | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const { items, total, loading, query, setQuery, reload } = useApiList<RecordItem>(endpoint);
+
+  const defaultValues = {
+    amount: "" as unknown as number,
+    category: categories[0],
+    description: "",
+    date: new Date().toISOString().slice(0, 10)
+  };
+
   const form = useForm<FinanceFormValues>({
     resolver: zodResolver(schema) as Resolver<FinanceFormValues>,
-    defaultValues: { amount: 0, category: categories[0], description: "", date: new Date().toISOString().slice(0, 10) }
+    defaultValues
   });
 
   async function submit(values: FinanceFormValues) {
@@ -57,18 +65,17 @@ export function FinanceRecordManager({
       });
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        toast({ 
-          title: "Could not save record", 
+        toast({
+          title: t("editRecord"),
           description: errorData.error?.message ?? "Please check the form and try again.",
           variant: "destructive"
         });
         return;
       }
       toast({ title: editing ? t("editRecord") : t("addRecord") });
-      setEditing(null);
-      form.reset({ amount: 0, category: categories[0], description: "", date: new Date().toISOString().slice(0, 10) });
+      cancelEdit();
       await reload();
-    } catch (error) {
+    } catch {
       toast({ title: "Unexpected error", description: "An error occurred while saving.", variant: "destructive" });
     } finally {
       setSubmitting(false);
@@ -77,9 +84,14 @@ export function FinanceRecordManager({
 
   async function remove(id: string) {
     if (!confirm(t("confirmDelete"))) return;
-    await fetch(`${endpoint}/${id}`, { method: "DELETE" });
-    toast({ title: "Record deleted" });
-    await reload();
+    try {
+      const res = await fetch(`${endpoint}/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error();
+      toast({ title: t("noRecords") === "Không tìm thấy bản ghi nào." ? "Đã xoá bản ghi" : "Record deleted" });
+      await reload();
+    } catch {
+      toast({ title: "Error", description: "Could not delete record.", variant: "destructive" });
+    }
   }
 
   function startEdit(item: RecordItem) {
@@ -93,30 +105,67 @@ export function FinanceRecordManager({
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  function cancelEdit() {
+    setEditing(null);
+    form.reset(defaultValues);
+  }
+
+  const totalPages = Math.ceil(total / 10);
+
   return (
     <div className="grid gap-6 xl:grid-cols-[380px_1fr]">
+      {/* Add / Edit Form */}
       <Card className="h-fit">
         <CardHeader>
-          <CardTitle>{editing ? t("editRecord") : t("addRecord")}</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            {editing ? (
+              <>
+                <Edit3 className="h-4 w-4 text-primary" />
+                {t("editRecord")}
+              </>
+            ) : (
+              <>
+                <Plus className="h-4 w-4 text-primary" />
+                {t("addRecord")}
+              </>
+            )}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <form className="space-y-4" onSubmit={form.handleSubmit(submit)}>
             <div className="space-y-2">
               <Label>{t("amount")}</Label>
-              <Input type="number" step="0.01" placeholder="0.00" {...form.register("amount")} />
-              {form.formState.errors.amount ? <p className="text-xs text-destructive">{form.formState.errors.amount.message}</p> : null}
+              <Input
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="0.00"
+                {...form.register("amount", { valueAsNumber: true })}
+              />
+              {form.formState.errors.amount ? (
+                <p className="text-xs text-destructive">{form.formState.errors.amount.message}</p>
+              ) : null}
             </div>
             <div className="space-y-2">
               <Label>{t("category")}</Label>
               <Select value={form.watch("category")} onValueChange={(value) => form.setValue("category", value)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{categories.map((category) => <SelectItem key={category} value={category}>{category}</SelectItem>)}</SelectContent>
+                <SelectContent>
+                  {categories.map((category) => (
+                    <SelectItem key={category} value={category}>{category}</SelectItem>
+                  ))}
+                </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
               <Label>{t("description")}</Label>
-              <Input placeholder={title === "Income" ? "Monthly salary..." : "Lunch, grocery..."} {...form.register("description")} />
-              {form.formState.errors.description ? <p className="text-xs text-destructive">{form.formState.errors.description.message}</p> : null}
+              <Input
+                placeholder={title === "Income" ? "Monthly salary, bonus..." : "Lunch, grocery, transport..."}
+                {...form.register("description")}
+              />
+              {form.formState.errors.description ? (
+                <p className="text-xs text-destructive">{form.formState.errors.description.message}</p>
+              ) : null}
             </div>
             <div className="space-y-2">
               <Label>{t("date")}</Label>
@@ -124,35 +173,59 @@ export function FinanceRecordManager({
             </div>
             <div className="flex gap-2">
               <Button className="flex-1" type="submit" disabled={submitting}>
-                {submitting ? "..." : editing ? t("save") : t("addRecord")}
+                {submitting ? (
+                  <><Loader2 className="h-4 w-4 animate-spin" /> {editing ? t("save") : t("addRecord")}</>
+                ) : (
+                  editing ? t("save") : t("addRecord")
+                )}
               </Button>
               {editing ? (
-                <Button variant="outline" type="button" onClick={() => {
-                  setEditing(null);
-                  form.reset({ amount: 0, category: categories[0], description: "", date: new Date().toISOString().slice(0, 10) });
-                }}>{t("cancel")}</Button>
+                <Button variant="outline" type="button" onClick={cancelEdit}>
+                  <X className="h-4 w-4" />
+                  {t("cancel")}
+                </Button>
               ) : null}
             </div>
           </form>
         </CardContent>
       </Card>
+
+      {/* Records Table */}
       <Card>
         <CardHeader className="gap-4">
           <div className="flex items-center justify-between gap-3">
-            <CardTitle>{title === "Income" ? t("income") : t("expense")} {t("transactions")}</CardTitle>
-            <span className="text-sm text-muted-foreground">{total} total</span>
+            <CardTitle>
+              {title === "Income" ? t("income") : t("expense")} {t("transactions")}
+            </CardTitle>
+            <span className="text-sm text-muted-foreground">{total} {t("transactions").toLowerCase()}</span>
           </div>
           <div className="grid gap-3 md:grid-cols-5">
             <div className="relative md:col-span-2">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input className="pl-9" placeholder={t("search")} value={query.search} onChange={(event) => setQuery({ ...query, search: event.target.value, page: 1 })} />
+              <Input
+                className="pl-9"
+                placeholder={t("search")}
+                value={query.search}
+                onChange={(e) => setQuery({ ...query, search: e.target.value, page: 1 })}
+              />
             </div>
-            <Input type="date" value={query.from} onChange={(event) => setQuery({ ...query, from: event.target.value })} />
-            <Input type="date" value={query.to} onChange={(event) => setQuery({ ...query, to: event.target.value })} />
-            <Select value={`${query.sort}:${query.direction}`} onValueChange={(value) => {
-              const [sort, direction] = value.split(":");
-              setQuery({ ...query, sort, direction });
-            }}>
+            <Input
+              type="date"
+              value={query.from}
+              onChange={(e) => setQuery({ ...query, from: e.target.value, page: 1 })}
+            />
+            <Input
+              type="date"
+              value={query.to}
+              onChange={(e) => setQuery({ ...query, to: e.target.value, page: 1 })}
+            />
+            <Select
+              value={`${query.sort}:${query.direction}`}
+              onValueChange={(value) => {
+                const [sort, direction] = value.split(":");
+                setQuery({ ...query, sort, direction, page: 1 });
+              }}
+            >
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="date:desc">{t("newest")}</SelectItem>
@@ -164,26 +237,53 @@ export function FinanceRecordManager({
           </div>
         </CardHeader>
         <CardContent>
-          {loading ? <Skeleton className="h-64" /> : items.length === 0 ? (
-            <div className="rounded-lg border border-dashed p-10 text-center text-sm text-muted-foreground">{t("noRecords")}</div>
+          {loading ? (
+            <div className="space-y-3">
+              {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
+            </div>
+          ) : items.length === 0 ? (
+            <div className="rounded-lg border border-dashed p-10 text-center text-sm text-muted-foreground">
+              {t("noRecords")}
+            </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="text-left text-muted-foreground">
                   <tr className="border-b">
-                    <th className="py-3">{t("category")}</th><th>{t("description")}</th><th>{t("amount")}</th><th>{t("date")}</th><th className="text-right">Actions</th>
+                    <th className="py-3 pr-4">{t("category")}</th>
+                    <th className="pr-4">{t("description")}</th>
+                    <th className="pr-4">{t("amount")}</th>
+                    <th className="pr-4">{t("date")}</th>
+                    <th className="text-right">{t("actions")}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {items.map((item) => (
-                    <tr key={item.id} className="border-b last:border-0 hover:bg-secondary/30 transition-colors">
-                      <td className="py-3 font-medium">{item.category}</td>
-                      <td>{item.description}</td>
-                      <td>{money(item.amount)}</td>
-                      <td>{prettyDate(item.date)}</td>
+                    <tr
+                      key={item.id}
+                      className="border-b last:border-0 hover:bg-secondary/30 transition-colors"
+                    >
+                      <td className="py-3 pr-4 font-medium">{item.category}</td>
+                      <td className="pr-4 max-w-[180px] truncate" title={item.description}>{item.description}</td>
+                      <td className="pr-4 font-semibold tabular-nums">{money(item.amount)}</td>
+                      <td className="pr-4 text-muted-foreground">{prettyDate(item.date)}</td>
                       <td className="text-right">
-                        <Button variant="ghost" size="icon" onClick={() => startEdit(item)}><Edit3 className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon" onClick={() => remove(item.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => startEdit(item)}
+                          title={t("editRecord")}
+                        >
+                          <Edit3 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => remove(item.id)}
+                          title={t("confirmDelete")}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
                       </td>
                     </tr>
                   ))}
@@ -191,9 +291,31 @@ export function FinanceRecordManager({
               </table>
             </div>
           )}
-          <div className="mt-4 flex justify-end gap-2">
-            <Button variant="outline" disabled={query.page <= 1} onClick={() => setQuery({ ...query, page: query.page - 1 })}>Prev</Button>
-            <Button variant="outline" disabled={query.page * 10 >= total} onClick={() => setQuery({ ...query, page: query.page + 1 })}>Next</Button>
+          {/* Pagination */}
+          <div className="mt-4 flex items-center justify-between gap-2">
+            <span className="text-sm text-muted-foreground">
+              {totalPages > 0
+                ? `${t("page")} ${query.page} ${t("of")} ${totalPages}`
+                : ""}
+            </span>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={query.page <= 1}
+                onClick={() => setQuery({ ...query, page: query.page - 1 })}
+              >
+                {t("prev")}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={query.page >= totalPages}
+                onClick={() => setQuery({ ...query, page: query.page + 1 })}
+              >
+                {t("next")}
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>

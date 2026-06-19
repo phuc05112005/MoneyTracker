@@ -25,8 +25,14 @@ export function paginationParams(url: string) {
 
 export function dateFilter(from: string | null, to: string | null) {
   if (!from && !to) return undefined;
+  let toDate: Date | undefined;
+  if (to) {
+    // Use the start of the next day so the entire "to" day is included
+    toDate = new Date(to);
+    toDate.setDate(toDate.getDate() + 1);
+  }
   return {
     ...(from ? { gte: new Date(from) } : {}),
-    ...(to ? { lte: new Date(to) } : {})
+    ...(toDate ? { lt: toDate } : {})
   };
 }
