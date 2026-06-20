@@ -8,7 +8,7 @@ export async function GET() {
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-  const [income, expense, recent, budget, categoryExpense] = await Promise.all([
+  const [income, expense, recent, budget, categoryExpense, allCategories] = await Promise.all([
     prisma.income.aggregate({ where: { userId: auth.userId }, _sum: { amount: true } }),
     prisma.expense.aggregate({ where: { userId: auth.userId }, _sum: { amount: true } }),
     Promise.all([
@@ -16,7 +16,8 @@ export async function GET() {
       prisma.expense.findMany({ where: { userId: auth.userId }, orderBy: { date: "desc" }, take: 5 })
     ]),
     prisma.budget.findUnique({ where: { userId_month_year: { userId: auth.userId, month: now.getMonth() + 1, year: now.getFullYear() } } }),
-    prisma.expense.groupBy({ by: ["category"], where: { userId: auth.userId }, _sum: { amount: true } })
+    prisma.expense.groupBy({ by: ["categoryId"], where: { userId: auth.userId }, _sum: { amount: true } }),
+    prisma.category.findMany({ where: { userId: auth.userId } })
   ]);
   const monthExpense = await prisma.expense.aggregate({
     where: { userId: auth.userId, date: { gte: monthStart, lt: monthEnd } },
@@ -31,6 +32,7 @@ export async function GET() {
   ]
     .sort((a, b) => +new Date(b.date) - +new Date(a.date))
     .slice(0, 6);
+  const categoryMap = new Map(allCategories.map(c => [c.id, c.name]));
   return NextResponse.json({
     totalIncome,
     totalExpense,
@@ -39,6 +41,9 @@ export async function GET() {
     recent: mergedRecent,
     budget,
     spent: monthSpent,
-    categories: categoryExpense.map((item) => ({ name: item.category, value: Number(item._sum.amount ?? 0) }))
+    categories: categoryExpense.map((item) => ({ 
+      name: item.categoryId ? categoryMap.get(item.categoryId) || "Unknown" : "Unknown", 
+      value: Number(item._sum.amount ?? 0) 
+    }))
   });
 }

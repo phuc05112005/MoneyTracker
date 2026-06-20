@@ -3,7 +3,7 @@
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, CreditCard, LayoutDashboard, LogOut, PiggyBank, ReceiptText, TrendingDown, TrendingUp, User, Languages } from "lucide-react";
+import { BarChart3, CreditCard, LayoutDashboard, LogOut, PiggyBank, ReceiptText, TrendingDown, TrendingUp, User, Languages, Wallet, Tags } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
 import { ThemeToggle } from "./theme-toggle";
@@ -21,6 +21,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     { href: "/income", label: t("income"), icon: TrendingUp },
     { href: "/expense", label: t("expense"), icon: TrendingDown },
     { href: "/budget", label: t("budget"), icon: PiggyBank },
+    { href: "/wallets", label: "Quản lý Ví", icon: Wallet },
+    { href: "/categories", label: "Danh mục", icon: Tags },
     { href: "/statistics", label: t("statistics"), icon: BarChart3 },
     { href: "/transactions", label: t("transactions"), icon: ReceiptText },
     { href: "/profile", label: t("profile"), icon: User }
