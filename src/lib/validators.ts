@@ -21,14 +21,16 @@ export const registerSchema = z
 
 export const incomeSchema = z.object({
   amount: z.coerce.number().positive("Amount must be positive"),
-  category: z.enum(incomeCategories),
+  categoryId: z.string().min(1, "Category is required"),
+  walletId: z.string().min(1, "Wallet is required"),
   description: z.string().min(2, "Description is required"),
   date: z.coerce.date()
 });
 
 export const expenseSchema = z.object({
   amount: z.coerce.number().positive("Amount must be positive"),
-  category: z.enum(expenseCategories),
+  categoryId: z.string().min(1, "Category is required"),
+  walletId: z.string().min(1, "Wallet is required"),
   description: z.string().min(2, "Description is required"),
   date: z.coerce.date()
 });

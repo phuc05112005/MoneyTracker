@@ -25,18 +25,24 @@ model User {
   accounts      Account[]
   sessions      Session[]
   resetTokens   PasswordResetToken[]
+  wallets       Wallet[]
+  categories    Category[]
 }
 
 model Income {
   id          String         @id @default(cuid())
   amount      Decimal        @db.Decimal(12, 2)
-  category    IncomeCategory
   description String
   date        DateTime
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
   userId      String
   user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  categoryId  String?
+  category    Category?      @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  walletId    String?
+  wallet      Wallet?        @relation(fields: [walletId], references: [id], onDelete: SetNull)
 
   @@index([userId, date])
 }
@@ -44,13 +50,17 @@ model Income {
 model Expense {
   id          String          @id @default(cuid())
   amount      Decimal         @db.Decimal(12, 2)
-  category    ExpenseCategory
   description String
   date        DateTime
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
   userId      String
   user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  categoryId  String?
+  category    Category?       @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  walletId    String?
+  wallet      Wallet?         @relation(fields: [walletId], references: [id], onDelete: SetNull)
 
   @@index([userId, date])
 }
@@ -114,21 +124,33 @@ model PasswordResetToken {
   @@index([userId, token])
 }
 
-enum IncomeCategory {
-  Salary
-  Freelance
-  Bonus
-  Investment
-  Other
+model Wallet {
+  id        String    @id @default(cuid())
+  name      String
+  balance   Decimal   @db.Decimal(12, 2) @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  incomes   Income[]
+  expenses  Expense[]
 }
 
-enum ExpenseCategory {
-  Food
-  Shopping
-  Transport
-  Entertainment
-  Education
-  Health
-  Bills
-  Other
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String
+  type      TransactionType
+  color     String    @default("#000000")
+  icon      String    @default("circle")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  incomes   Income[]
+  expenses  Expense[]
 }

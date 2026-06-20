@@ -1,4 +1,4 @@
-import { PrismaClient, IncomeCategory, ExpenseCategory } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { subDays, subMonths } from "date-fns";
 
@@ -27,7 +27,36 @@ async function main() {
 
   console.log("Created user:", user.email);
 
-  // 3. Create Budget for current month
+  // 3. Create default Wallet
+  const wallet = await prisma.wallet.create({
+    data: {
+      userId: user.id,
+      name: "Cash",
+      balance: 10000,
+    }
+  });
+
+  // 4. Create default Categories
+  const incomeCategoryNames = ["Salary", "Freelance", "Bonus", "Investment", "Other"];
+  const expenseCategoryNames = ["Food", "Shopping", "Transport", "Entertainment", "Education", "Health", "Bills", "Other"];
+
+  const incomeCategories = await Promise.all(
+    incomeCategoryNames.map((name) =>
+      prisma.category.create({
+        data: { name, type: "INCOME", color: "#10b981", userId: user.id },
+      })
+    )
+  );
+
+  const expenseCategories = await Promise.all(
+    expenseCategoryNames.map((name) =>
+      prisma.category.create({
+        data: { name, type: "EXPENSE", color: "#ef4444", userId: user.id },
+      })
+    )
+  );
+
+  // 5. Create Budget for current month
   const now = new Date();
   await prisma.budget.create({
     data: {
@@ -38,28 +67,28 @@ async function main() {
     },
   });
 
-  // 4. Create Incomes over the last 3 months
-  const incomeCats: IncomeCategory[] = ["Salary", "Freelance", "Bonus", "Investment", "Other"];
+  // 6. Create Incomes
   for (let i = 0; i < 15; i++) {
     await prisma.income.create({
       data: {
         userId: user.id,
         amount: Math.floor(Math.random() * 2000) + 500,
-        category: incomeCats[Math.floor(Math.random() * incomeCats.length)],
+        categoryId: incomeCategories[Math.floor(Math.random() * incomeCategories.length)].id,
+        walletId: wallet.id,
         description: `Income source ${i + 1}`,
         date: subDays(now, Math.floor(Math.random() * 90)),
       },
     });
   }
 
-  // 5. Create Expenses over the last 3 months
-  const expenseCats: ExpenseCategory[] = ["Food", "Shopping", "Transport", "Entertainment", "Education", "Health", "Bills", "Other"];
+  // 7. Create Expenses
   for (let i = 0; i < 40; i++) {
     await prisma.expense.create({
       data: {
         userId: user.id,
         amount: Math.floor(Math.random() * 300) + 10,
-        category: expenseCats[Math.floor(Math.random() * expenseCats.length)],
+        categoryId: expenseCategories[Math.floor(Math.random() * expenseCategories.length)].id,
+        walletId: wallet.id,
         description: `Expense item ${i + 1}`,
         date: subDays(now, Math.floor(Math.random() * 90)),
       },

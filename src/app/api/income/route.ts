@@ -13,10 +13,22 @@ export async function GET(request: Request) {
     date: dateFilter(from, to)
   };
   const [items, total] = await Promise.all([
-    prisma.income.findMany({ where, orderBy: { [sort]: direction }, take, skip }),
+    prisma.income.findMany({ 
+      where, 
+      orderBy: { [sort]: direction }, 
+      take, 
+      skip,
+      include: { category: true, wallet: true }
+    }),
     prisma.income.count({ where })
   ]);
-  return NextResponse.json({ items, total });
+  // Format items to have flattened category name if needed by old components
+  const formattedItems = items.map(item => ({
+    ...item,
+    categoryName: item.category?.name || "Unknown",
+    walletName: item.wallet?.name || "Unknown"
+  }));
+  return NextResponse.json({ items: formattedItems, total });
 }
 
 export async function POST(request: Request) {

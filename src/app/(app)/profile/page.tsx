@@ -1,6 +1,6 @@
 "use client";
 
-import { Save, Trash2, User } from "lucide-react";
+import { RefreshCw, Save, Trash2, User } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -22,6 +22,7 @@ export default function ProfilePage() {
   const { t } = useI18n();
   const [saving, setSaving] = useState(false);
   const [changing, setChanging] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const form = useForm<Profile>({ defaultValues: { fullname: "", email: "", avatar: "", currency: "USD" } });
   const passwordForm = useForm<{ password: string; confirmPassword: string }>({
     defaultValues: { password: "", confirmPassword: "" }
@@ -105,6 +106,22 @@ export default function ProfilePage() {
       await signOut({ callbackUrl: "/register" });
     } catch {
       toast({ title: "Error", description: "Failed to delete account.", variant: "destructive" });
+    }
+  }
+
+  async function resetData() {
+    if (!confirm("Bạn có chắc chắn muốn xóa tất cả dữ liệu (Thu, Chi, Ngân sách) không? Hành động này không thể hoàn tác.")) return;
+    setResetting(true);
+    try {
+      const res = await fetch("/api/profile/reset", { method: "DELETE" });
+      if (!res.ok) throw new Error();
+      toast({ title: "Reset dữ liệu thành công ✓" });
+      // Reload page to clear caches/UI state
+      window.location.reload();
+    } catch {
+      toast({ title: "Lỗi", description: "Không thể reset dữ liệu.", variant: "destructive" });
+    } finally {
+      setResetting(false);
     }
   }
 
@@ -216,17 +233,29 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
 
-        {/* Danger Zone */}
         <Card className="border-destructive/20 bg-destructive/5">
           <CardHeader>
-            <CardTitle className="text-lg text-destructive">{t("deleteAccount")}</CardTitle>
+            <CardTitle className="text-lg text-destructive">Khu vực nguy hiểm</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm text-destructive/80">{t("confirmDeleteAccount")}</p>
-            <Button variant="destructive" onClick={deleteAccount} className="w-full sm:w-auto">
-              <Trash2 className="h-4 w-4" />
-              {t("deleteAccount")}
-            </Button>
+            <div className="flex flex-col gap-4">
+              <div>
+                <p className="text-sm font-semibold mb-1">Reset dữ liệu giao dịch</p>
+                <p className="text-sm text-muted-foreground mb-3">Xóa toàn bộ thu nhập, chi phí và ngân sách của bạn (ví dụ: khi đổi đơn vị tiền tệ). Không thể hoàn tác.</p>
+                <Button variant="outline" className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground w-full sm:w-auto" onClick={resetData} disabled={resetting}>
+                  <RefreshCw className={`h-4 w-4 mr-2 ${resetting ? "animate-spin" : ""}`} />
+                  {resetting ? "Đang xử lý..." : "Reset toàn bộ dữ liệu"}
+                </Button>
+              </div>
+              <div className="border-t border-destructive/20 pt-4 mt-2">
+                <p className="text-sm font-semibold mb-1">{t("deleteAccount")}</p>
+                <p className="text-sm text-destructive/80 mb-3">{t("confirmDeleteAccount")}</p>
+                <Button variant="destructive" onClick={deleteAccount} className="w-full sm:w-auto">
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  {t("deleteAccount")}
+                </Button>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
