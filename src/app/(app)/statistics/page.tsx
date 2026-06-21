@@ -49,11 +49,11 @@ export default function StatisticsPage() {
       {range === "custom" && (
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-1">
-            <label className="text-xs text-muted-foreground uppercase tracking-wider">{t("date")} từ</label>
+            <label className="text-xs text-muted-foreground uppercase tracking-wider">{t("dateFrom")}</label>
             <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
           </div>
           <div className="space-y-1">
-            <label className="text-xs text-muted-foreground uppercase tracking-wider">{t("date")} đến</label>
+            <label className="text-xs text-muted-foreground uppercase tracking-wider">{t("dateTo")}</label>
             <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
           </div>
         </div>

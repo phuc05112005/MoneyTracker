@@ -110,16 +110,16 @@ export default function ProfilePage() {
   }
 
   async function resetData() {
-    if (!confirm("Bạn có chắc chắn muốn xóa tất cả dữ liệu (Thu, Chi, Ngân sách) không? Hành động này không thể hoàn tác.")) return;
+    if (!confirm(t("confirmResetData"))) return;
     setResetting(true);
     try {
       const res = await fetch("/api/profile/reset", { method: "DELETE" });
       if (!res.ok) throw new Error();
-      toast({ title: "Reset dữ liệu thành công ✓" });
+      toast({ title: t("resetDataSuccess") });
       // Reload page to clear caches/UI state
       window.location.reload();
     } catch {
-      toast({ title: "Lỗi", description: "Không thể reset dữ liệu.", variant: "destructive" });
+      toast({ title: t("error"), description: t("resetDataError"), variant: "destructive" });
     } finally {
       setResetting(false);
     }
@@ -235,16 +235,16 @@ export default function ProfilePage() {
 
         <Card className="border-destructive/20 bg-destructive/5">
           <CardHeader>
-            <CardTitle className="text-lg text-destructive">Khu vực nguy hiểm</CardTitle>
+            <CardTitle className="text-lg text-destructive">{t("dangerZone")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex flex-col gap-4">
               <div>
-                <p className="text-sm font-semibold mb-1">Reset dữ liệu giao dịch</p>
-                <p className="text-sm text-muted-foreground mb-3">Xóa toàn bộ thu nhập, chi phí và ngân sách của bạn (ví dụ: khi đổi đơn vị tiền tệ). Không thể hoàn tác.</p>
+                <p className="text-sm font-semibold mb-1">{t("resetTransactionData")}</p>
+                <p className="text-sm text-muted-foreground mb-3">{t("resetDataDesc")}</p>
                 <Button variant="outline" className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground w-full sm:w-auto" onClick={resetData} disabled={resetting}>
                   <RefreshCw className={`h-4 w-4 mr-2 ${resetting ? "animate-spin" : ""}`} />
-                  {resetting ? "Đang xử lý..." : "Reset toàn bộ dữ liệu"}
+                  {resetting ? t("processing") : t("resetAllData")}
                 </Button>
               </div>
               <div className="border-t border-destructive/20 pt-4 mt-2">

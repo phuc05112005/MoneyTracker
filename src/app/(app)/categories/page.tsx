@@ -33,7 +33,7 @@ export default function CategoriesPage() {
       const data = await res.json();
       setCategories(data);
     } catch {
-      toast({ title: "Lỗi khi tải danh sách Danh mục", variant: "destructive" });
+      toast({ title: t("loadCategoryError"), variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -53,11 +53,11 @@ export default function CategoriesPage() {
         body: JSON.stringify(values)
       });
       if (!res.ok) throw new Error();
-      toast({ title: editing ? "Đã cập nhật Danh mục" : "Đã thêm Danh mục mới" });
+      toast({ title: editing ? t("categoryUpdated") : t("categoryAdded") });
       cancelEdit();
       await fetchCategories();
     } catch {
-      toast({ title: "Lỗi khi lưu Danh mục", variant: "destructive" });
+      toast({ title: t("saveCategoryError"), variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
@@ -68,10 +68,10 @@ export default function CategoriesPage() {
     try {
       const res = await fetch(`/api/categories/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error();
-      toast({ title: "Đã xóa Danh mục" });
+      toast({ title: t("categoryDeleted") });
       await fetchCategories();
     } catch {
-      toast({ title: "Không thể xóa Danh mục", variant: "destructive" });
+      toast({ title: t("deleteCategoryError"), variant: "destructive" });
     }
   }
 
@@ -92,29 +92,29 @@ export default function CategoriesPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             {editing ? <Edit3 className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-            {editing ? "Sửa Danh mục" : "Thêm Danh mục"}
+            {editing ? t("editCategory") : t("addCategory")}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <form className="space-y-4" onSubmit={form.handleSubmit(submit)}>
             <div className="space-y-2">
-              <Label>Tên Danh mục</Label>
-              <Input placeholder="Ví dụ: Lương, Ăn uống..." {...form.register("name", { required: true })} />
+              <Label>{t("categoryName")}</Label>
+              <Input placeholder=t("categoryNamePlaceholder") {...form.register("name", { required: true })} />
             </div>
             
             <div className="space-y-2">
-              <Label>Loại</Label>
+              <Label>{t("type")}</Label>
               <Select value={form.watch("type")} onValueChange={(value: "INCOME"|"EXPENSE") => form.setValue("type", value)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="EXPENSE">Chi phí (Expense)</SelectItem>
-                  <SelectItem value="INCOME">Thu nhập (Income)</SelectItem>
+                  <SelectItem value="EXPENSE">{t("expense")}</SelectItem>
+                  <SelectItem value="INCOME">{t("income")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label>Màu sắc</Label>
+              <Label>{t("color")}</Label>
               <div className="flex gap-2">
                 <Input type="color" className="w-16 h-10 p-1" {...form.register("color")} />
                 <Input className="flex-1" type="text" {...form.register("color")} />
@@ -124,11 +124,11 @@ export default function CategoriesPage() {
             <div className="flex gap-2">
               <Button type="submit" disabled={submitting} className="flex-1">
                 {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {editing ? "Lưu thay đổi" : "Thêm Danh mục"}
+                {editing ? t("saveChanges") : t("addCategory")}
               </Button>
               {editing && (
                 <Button variant="outline" type="button" onClick={cancelEdit}>
-                  <X className="h-4 w-4 mr-2" /> Hủy
+                  <X className="h-4 w-4 mr-2" /> {t("cancel")}
                 </Button>
               )}
             </div>
@@ -139,7 +139,7 @@ export default function CategoriesPage() {
       {/* List */}
       <Card>
         <CardHeader>
-          <CardTitle>Danh sách Danh mục</CardTitle>
+          <CardTitle>{t("categoryList")}</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -148,7 +148,7 @@ export default function CategoriesPage() {
             </div>
           ) : categories.length === 0 ? (
             <div className="text-center p-10 text-muted-foreground border border-dashed rounded-lg">
-              Chưa có danh mục nào.
+              {t("noCategories")}
             </div>
           ) : (
             <div className="grid gap-3">
@@ -160,7 +160,7 @@ export default function CategoriesPage() {
                     </div>
                     <div>
                       <p className="font-semibold text-sm">{cat.name}</p>
-                      <p className="text-xs text-muted-foreground">{cat.type === "INCOME" ? "Thu nhập" : "Chi phí"}</p>
+                      <p className="text-xs text-muted-foreground">{cat.type === "INCOME" ? t("income") : t("expense")}</p>
                     </div>
                   </div>
                   <div className="flex gap-1">

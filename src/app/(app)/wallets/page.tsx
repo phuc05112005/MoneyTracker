@@ -34,7 +34,7 @@ export default function WalletsPage() {
       const data = await res.json();
       setWallets(data);
     } catch {
-      toast({ title: "Lỗi khi tải danh sách Ví", variant: "destructive" });
+      toast({ title: t("loadWalletError"), variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -55,11 +55,11 @@ export default function WalletsPage() {
         body: JSON.stringify(payload)
       });
       if (!res.ok) throw new Error();
-      toast({ title: editing ? "Đã cập nhật Ví" : "Đã thêm Ví mới" });
+      toast({ title: editing ? t("walletUpdated") : t("walletAdded") });
       cancelEdit();
       await fetchWallets();
     } catch {
-      toast({ title: "Lỗi khi lưu Ví", variant: "destructive" });
+      toast({ title: t("saveWalletError"), variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
@@ -70,10 +70,10 @@ export default function WalletsPage() {
     try {
       const res = await fetch(`/api/wallets/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error();
-      toast({ title: "Đã xóa Ví" });
+      toast({ title: t("walletDeleted") });
       await fetchWallets();
     } catch {
-      toast({ title: "Không thể xóa Ví", variant: "destructive" });
+      toast({ title: t("deleteWalletError"), variant: "destructive" });
     }
   }
 
@@ -94,27 +94,27 @@ export default function WalletsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             {editing ? <Edit3 className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-            {editing ? "Sửa Ví" : "Thêm Ví mới"}
+            {editing ? t("editWallet") : t("addWallet")}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <form className="space-y-4" onSubmit={form.handleSubmit(submit)}>
             <div className="space-y-2">
-              <Label>Tên Ví</Label>
-              <Input placeholder="Ví dụ: Tiền mặt, Vietcombank, Momo..." {...form.register("name", { required: true })} />
+              <Label>{t("walletName")}</Label>
+              <Input placeholder=t("walletNamePlaceholder") {...form.register("name", { required: true })} />
             </div>
             <div className="space-y-2">
-              <Label>Số dư ban đầu</Label>
+              <Label>{t("initialBalance")}</Label>
               <Input type="number" step="0.01" {...form.register("balance", { valueAsNumber: true })} />
             </div>
             <div className="flex gap-2">
               <Button type="submit" disabled={submitting} className="flex-1">
                 {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {editing ? "Lưu thay đổi" : "Thêm Ví"}
+                {editing ? t("saveChanges") : t("addWallet")}
               </Button>
               {editing && (
                 <Button variant="outline" type="button" onClick={cancelEdit}>
-                  <X className="h-4 w-4 mr-2" /> Hủy
+                  <X className="h-4 w-4 mr-2" /> {t("cancel")}
                 </Button>
               )}
             </div>
@@ -125,7 +125,7 @@ export default function WalletsPage() {
       {/* List */}
       <Card>
         <CardHeader>
-          <CardTitle>Danh sách Ví</CardTitle>
+          <CardTitle>{t("walletList")}</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -134,7 +134,7 @@ export default function WalletsPage() {
             </div>
           ) : wallets.length === 0 ? (
             <div className="text-center p-10 text-muted-foreground border border-dashed rounded-lg">
-              Chưa có ví nào. Hãy tạo một ví mới!
+              {t("noWallets")}
             </div>
           ) : (
             <div className="grid gap-4">
