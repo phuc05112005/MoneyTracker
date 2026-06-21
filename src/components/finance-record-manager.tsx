@@ -88,7 +88,7 @@ export function FinanceRecordManager({
         const errorData = await response.json().catch(() => ({}));
         toast({
           title: t("editRecord"),
-          description: errorData.error?.message ?? "Please check the form and try again.",
+          description: errorData.error?.message ?? t("saveRecordError"),
           variant: "destructive"
         });
         return;
@@ -97,7 +97,7 @@ export function FinanceRecordManager({
       cancelEdit();
       await reload();
     } catch {
-      toast({ title: "Unexpected error", description: "An error occurred while saving.", variant: "destructive" });
+      toast({ title: t("unexpectedError"), description: t("saveRecordError"), variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
@@ -108,10 +108,10 @@ export function FinanceRecordManager({
     try {
       const res = await fetch(`${endpoint}/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error();
-      toast({ title: t("noRecords") === "Không tìm thấy bản ghi nào." ? "Đã xoá bản ghi" : "Record deleted" });
+      toast({ title: t("recordDeleted") });
       await reload();
     } catch {
-      toast({ title: "Error", description: "Could not delete record.", variant: "destructive" });
+      toast({ title: t("error"), description: t("deleteRecordError"), variant: "destructive" });
     }
   }
 
@@ -171,9 +171,9 @@ export function FinanceRecordManager({
 
             <div className="grid gap-4 grid-cols-2">
               <div className="space-y-2">
-                <Label>Ví</Label>
+                <Label>{t("wallet")}</Label>
                 <Select value={form.watch("walletId")} onValueChange={(value) => form.setValue("walletId", value)}>
-                  <SelectTrigger><SelectValue placeholder="Chọn ví..." /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t("selectWallet")} /></SelectTrigger>
                   <SelectContent>
                     {wallets.map((wallet) => (
                       <SelectItem key={wallet.id} value={wallet.id}>{wallet.name}</SelectItem>
@@ -188,7 +188,7 @@ export function FinanceRecordManager({
               <div className="space-y-2">
                 <Label>{t("category")}</Label>
                 <Select value={form.watch("categoryId")} onValueChange={(value) => form.setValue("categoryId", value)}>
-                  <SelectTrigger><SelectValue placeholder="Chọn..." /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t("selectCategory")} /></SelectTrigger>
                   <SelectContent>
                     {categories.map((category) => (
                       <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>
@@ -204,7 +204,7 @@ export function FinanceRecordManager({
             <div className="space-y-2">
               <Label>{t("description")}</Label>
               <Input
-                placeholder={title === "Income" ? "Monthly salary, bonus..." : "Lunch, grocery, transport..."}
+                placeholder={title === "Income" ? t("incomeDescPlaceholder") : t("expenseDescPlaceholder")}
                 {...form.register("description")}
               />
               {form.formState.errors.description ? (
@@ -294,7 +294,7 @@ export function FinanceRecordManager({
               <table className="w-full text-sm whitespace-nowrap">
                 <thead className="text-left text-muted-foreground">
                   <tr className="border-b">
-                    <th className="py-3 pr-4">Ví</th>
+                    <th className="py-3 pr-4">{t("wallet")}</th>
                     <th className="pr-4">{t("category")}</th>
                     <th className="pr-4">{t("description")}</th>
                     <th className="pr-4">{t("amount")}</th>
