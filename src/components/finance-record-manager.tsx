@@ -46,12 +46,17 @@ export function FinanceRecordManager({
     const type = title === "Income" ? "INCOME" : "EXPENSE";
     
     Promise.all([
-      fetch(`/api/categories?type=${type}`).then(r => r.json()),
-      fetch('/api/wallets').then(r => r.json())
+      fetch(`/api/categories?type=${type}`).then(r => r.ok ? r.json() : []),
+      fetch('/api/wallets').then(r => r.ok ? r.json() : [])
     ]).then(([catData, walData]) => {
       if (isMounted) {
-        setCategories(catData || []);
-        setWallets(walData || []);
+        setCategories(Array.isArray(catData) ? catData : []);
+        setWallets(Array.isArray(walData) ? walData : []);
+      }
+    }).catch(() => {
+      if (isMounted) {
+        setCategories([]);
+        setWallets([]);
       }
     });
     

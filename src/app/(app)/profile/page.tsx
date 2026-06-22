@@ -1,6 +1,6 @@
 "use client";
 
-import { RefreshCw, Save, Trash2, User } from "lucide-react";
+import { RefreshCw, Save, Trash2, User, Wallet, Tags } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -203,6 +203,27 @@ export default function ProfilePage() {
 
       {/* Security & Danger */}
       <div className="space-y-6">
+        {/* Management Links */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Data Management</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col sm:flex-row gap-3">
+            <Button variant="outline" className="flex-1 justify-start" asChild>
+              <a href="/wallets">
+                <Wallet className="h-4 w-4 mr-2 text-primary" />
+                {t("manageWallets")}
+              </a>
+            </Button>
+            <Button variant="outline" className="flex-1 justify-start" asChild>
+              <a href="/categories">
+                <Tags className="h-4 w-4 mr-2 text-primary" />
+                {t("manageCategories")}
+              </a>
+            </Button>
+          </CardContent>
+        </Card>
+
         {/* Change Password */}
         <Card>
           <CardHeader>
