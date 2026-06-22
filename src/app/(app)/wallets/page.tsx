@@ -101,7 +101,7 @@ export default function WalletsPage() {
           <form className="space-y-4" onSubmit={form.handleSubmit(submit)}>
             <div className="space-y-2">
               <Label>{t("walletName")}</Label>
-              <Input placeholder=t("walletNamePlaceholder") {...form.register("name", { required: true })} />
+              <Input placeholder={t("walletNamePlaceholder")} {...form.register("name", { required: true })} />
             </div>
             <div className="space-y-2">
               <Label>{t("initialBalance")}</Label>

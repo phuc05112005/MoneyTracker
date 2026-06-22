@@ -99,7 +99,7 @@ export default function CategoriesPage() {
           <form className="space-y-4" onSubmit={form.handleSubmit(submit)}>
             <div className="space-y-2">
               <Label>{t("categoryName")}</Label>
-              <Input placeholder=t("categoryNamePlaceholder") {...form.register("name", { required: true })} />
+              <Input placeholder={t("categoryNamePlaceholder")} {...form.register("name", { required: true })} />
             </div>
             
             <div className="space-y-2">
