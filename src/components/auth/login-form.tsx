@@ -18,6 +18,7 @@ import { useToast } from "@/components/ui/toaster";
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [hasGoogle, setHasGoogle] = useState(false);
+  const [canResendVerification, setCanResendVerification] = useState(false);
   const router = useRouter();
   const toast = useToast();
   const form = useForm<z.infer<typeof loginSchema>>({ resolver: zodResolver(loginSchema), defaultValues: { email: "", password: "", remember: false } });
@@ -27,15 +28,47 @@ export function LoginForm() {
       .then((response) => response.json())
       .then((providers) => setHasGoogle(Boolean(providers.google)))
       .catch(() => setHasGoogle(false));
+
+    const verified = new URLSearchParams(window.location.search).get("verified");
+    if (verified === "success") {
+      toast({ title: "Email verified", description: "You can log in now." });
+    }
+    if (verified === "invalid") {
+      toast({ title: "Verification failed", description: "This verification link is invalid or expired." });
+    }
   }, []);
 
   async function submit(values: z.infer<typeof loginSchema>) {
+    setCanResendVerification(false);
     const result = await signIn("credentials", { email: values.email, password: values.password, redirect: false });
     if (result?.error) {
-      toast({ title: "Login failed", description: "Email or password is incorrect." });
+      if (result.error === "EMAIL_NOT_VERIFIED") {
+        setCanResendVerification(true);
+      }
+      toast({
+        title: "Login failed",
+        description: result.error === "EMAIL_NOT_VERIFIED" ? "Please verify your email before logging in." : "Email or password is incorrect."
+      });
       return;
     }
     router.push("/dashboard");
+  }
+
+  async function resendVerification() {
+    const email = form.getValues("email");
+    const response = await fetch("/api/auth/resend-verification", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email })
+    });
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      toast({ title: "Verification email failed", description: data.error ?? "Please try again later." });
+      return;
+    }
+
+    toast({ title: "Check your email", description: data.message ?? "A new verification link was sent if needed." });
   }
 
   return (
@@ -62,6 +95,11 @@ export function LoginForm() {
             <label className="flex items-center gap-2"><input type="checkbox" {...form.register("remember")} /> Remember me</label>
             <Link href="/forgot-password" className="text-primary">Forgot password?</Link>
           </div>
+          {canResendVerification ? (
+            <Button className="w-full" type="button" variant="outline" onClick={resendVerification}>
+              Resend verification email
+            </Button>
+          ) : null}
           <Button className="w-full" type="submit"><LogIn className="h-4 w-4" />Login</Button>
           <Button
             className="w-full"

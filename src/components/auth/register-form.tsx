@@ -25,7 +25,7 @@ export function RegisterForm() {
       toast({ title: "Registration failed", description: data.error ?? "Please try again." });
       return;
     }
-    toast({ title: "Account created", description: "You can log in now." });
+    toast({ title: "Check your email", description: "We sent you a verification link to activate your account." });
     router.push("/login");
   }
 

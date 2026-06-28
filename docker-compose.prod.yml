@@ -1,0 +1,29 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: moneytracker-app
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    depends_on:
+      - postgres
+    ports:
+      - "3000:3000"
+    command: sh -c "npx prisma migrate deploy && node server.js"
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: moneytracker-postgres-prod
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    environment:
+      POSTGRES_USER: moneytracker
+      POSTGRES_DB: moneytracker
+    volumes:
+      - moneytracker-postgres-prod:/var/lib/postgresql/data
+
+volumes:
+  moneytracker-postgres-prod:

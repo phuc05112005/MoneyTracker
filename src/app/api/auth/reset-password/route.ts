@@ -19,7 +19,10 @@ export async function POST(request: Request) {
   await prisma.$transaction([
     prisma.user.update({
       where: { id: resetToken.userId },
-      data: { password: await bcrypt.hash(parsed.data.password, 12) }
+      data: {
+        password: await bcrypt.hash(parsed.data.password, 12),
+        emailVerified: resetToken.user.emailVerified ?? new Date()
+      }
     }),
     prisma.passwordResetToken.update({
       where: { id: resetToken.id },
