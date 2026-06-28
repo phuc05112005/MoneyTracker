@@ -18,6 +18,7 @@ const providers: NextAuthOptions["providers"] = [
       if (!user?.password) return null;
       const isValid = await bcrypt.compare(credentials.password, user.password);
       if (!isValid) return null;
+      if (!user.emailVerified) throw new Error("EMAIL_NOT_VERIFIED");
       return {
         id: user.id,
         name: user.fullname || user.name,
